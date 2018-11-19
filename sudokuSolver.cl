@@ -39,14 +39,14 @@ void vectorAdd(__global result *output,
 		r.r[i] = 0;
 	//printf("%d %d %d %d", sizeof(sudokuPallet), sizeof(result), gid, get_local_id(0));
 	for (int i = 0; i < 9; i++)
-		r.r[input[gid].n[i][x]] = 1;
+		r.r[pal.n[i][x]] = 1;
 	for (int i = 0; i < 9; i++)
-		r.r[input[gid].n[y][i]] = 1;
+		r.r[pal.n[y][i]] = 1;
 	int xkw = (x / 3) * 3;
 	int ykw = (y / 3) * 3;
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 3; j++) {
-			r.r[input[gid].n[ykw + i][xkw + j]] = 1;
+			r.r[pal.n[ykw + i][xkw + j]] = 1;
 		}
 	r.r[0] = !r.r[1] + !r.r[2] + !r.r[3] + !r.r[4] + !r.r[5] +
 		!r.r[6] + !r.r[7] + !r.r[8] + !r.r[9];

@@ -34,6 +34,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 const int NUM_ELEMENTS = 64;
 const size_t palletSize = sizeof(sudokuPallet);
+clock_t start, end;
 
 typedef struct _result {
 	cl_char r[10];
@@ -76,22 +77,27 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 	std::vector<sudokuPallet> input(1);
 	input[0] = pallet;
 	std::vector<result> output(1);
-	int x = 0, y = 0;
+	int x = -1, y = 0;
 	int  size = 1;
 	cl::Buffer newInputBuffer(input.begin(), input.end(), true);
 	cl::Buffer newOutputBuffer(output.begin(), output.end(), false);
 	cl::Buffer oldInputBuffer, oldOutputBuffer;
-	while (true) {
+	while (!next0inPallet(pallet, y, x)) {
 		cl::Event e;
-		std::cout << "size: " << std::endl;
+		std::cout << "size: ";
+
 		cl::NDRange ndrg(size);
 		cl::NDRange ndrl(size > 256 ? 256 : size);
 		cl::EnqueueArgs arg(ndrg, ndrl);
-		e = vectorAddKernel(
-			arg,
+		std::cout << size << std::endl;
+
+		e = vectorAddKernel(arg,
 			newOutputBuffer, newInputBuffer,
 			y, x);
-		std::cout << size << std::endl;
+
+		end = clock();
+		std::cout << "time: " << (double)(end - start)/1000 << std::endl;
+
 		cl::copy(newOutputBuffer, output.begin(), output.end());
 		//printResult("output", output[0]);
 
@@ -103,8 +109,6 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 		cl::copy(newInputBuffer, input.begin(), input.end());
 
 		//printPallet("hope", input[0]);
-		if (next0inPallet(pallet, y, x))
-			break;
 
 	}
 
@@ -117,8 +121,9 @@ main(int argc, char * argv[]) {
 	cl_int status = 0;
 	const char *filename = "sudokuSolver.cl";
 	std::string sourceStr;
+	start = clock();
 
-	sudokuPallet pallet = fileToSudoku("example/Hard.txt");
+	sudokuPallet pallet = fileToSudoku("example/Entry.txt");
 	status = fileToString(filename, sourceStr);
 	if (status != SUCCESS) {
 		std::cout << "Failed to open " << filename << std::endl;
@@ -155,7 +160,9 @@ main(int argc, char * argv[]) {
 			y);*/
 
 	printPallet("\nDone:", solved);
+	printPallet("\nInput:", pallet);
 	std::cout << "Passed\n";
+	
 
     return SUCCESS;
 }
