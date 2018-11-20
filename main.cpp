@@ -81,6 +81,7 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 	pallets[0] = pallet;
 	std::vector<result> output(1); //useless
 	std::vector<cl_char> lasts(1);
+	lasts[0] = pallet.numbers[0][0];
 	int x = -1, y = 0;
 	int lastX = 0, lastY = 0;
 	int  size = 1;
@@ -113,7 +114,7 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 		prepareNewBuffer(oldInputBuffer, oldOutputBuffer, newInputBuffer,
 			newOutputBuffer, y, x, size, lasts);
 
-		cl::copy(newInputBuffer, pallets.begin(), pallets.end());
+		//cl::copy(newInputBuffer, pallets.begin(), pallets.end());
 
 		//printPallet("hope", pallets[0]);
 		lastX = x;
@@ -135,7 +136,7 @@ main(int argc, char * argv[]) {
 	std::string sourceStr;
 	start = clock();
 
-	sudokuPallet pallet = fileToSudoku("example/Hard.txt");
+	sudokuPallet pallet = fileToSudoku("example/Zeroes.txt");
 	status = fileToString(filename, sourceStr);
 	if (status != SUCCESS) {
 		std::cout << "Failed to open " << filename << std::endl;
