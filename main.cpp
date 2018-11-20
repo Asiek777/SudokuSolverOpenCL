@@ -1,10 +1,10 @@
 /**********************************************************************
-Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright ï¿½2015 Advanced Micro Devices, Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-•	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-•	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or
+ï¿½	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ï¿½	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or
  other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -32,7 +32,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 //#define FAILURE 1
 //#define EXPECTED_FAILURE 2
 
-const int NUM_ELEMENTS = 64;
+int workGroupSize = 1;
 const size_t palletSize = sizeof(sudokuPallet);
 clock_t start, end;
 
@@ -81,6 +81,7 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 	pallets[0] = pallet;
 	std::vector<result> output(1); //useless
 	std::vector<cl_char> lasts(1);
+	lasts[0] = pallet.numbers[0][0];
 	int x = -1, y = 0;
 	int lastX = 0, lastY = 0;
 	int  size = 1;
@@ -94,7 +95,7 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 		std::cout << "size: ";
 
 		cl::NDRange ndrg(size);
-		cl::NDRange ndrl(size > 256 ? 256 : size);
+		cl::NDRange ndrl(size > workGroupSize ? workGroupSize : size);
 		cl::EnqueueArgs arg(ndrg, ndrl);
 		std::cout << size << std::endl;
 
