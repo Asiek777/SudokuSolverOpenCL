@@ -42,11 +42,12 @@ typedef struct _result {
 
 void printResult(std::string header, result r);
 
-typedef cl::make_kernel<cl::Buffer&, cl::Buffer&,
-	cl_int&, cl_int&> KernelType;
+typedef cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&,
+	cl_int&, cl_int&, cl_int&, cl_int&> KernelType;
 
 void prepareNewBuffer(cl::Buffer& oldInputBuffer, cl::Buffer& oldOutputBuffer, 
-	cl::Buffer& newInputBuffer, cl::Buffer& newOutputBuffer, int y, int x, int& size) {
+	cl::Buffer& newInputBuffer, cl::Buffer& newOutputBuffer, int y, int x, int& size, 
+	std::vector<cl_char>& lasts) {
 	std::vector<result> output(size);
 	cl::copy(oldOutputBuffer, output.begin(), output.end());
 	int newSize = 0, smallOffset = y * 9 + x;
@@ -58,14 +59,16 @@ void prepareNewBuffer(cl::Buffer& oldInputBuffer, cl::Buffer& oldOutputBuffer,
 	newOutputBuffer = cl::Buffer(CL_MEM_READ_WRITE, sizeof(result)*newSize);
 
 	int count = 0;
+	lasts.resize(newSize*(sizeof(cl_char)));
 	cl::CommandQueue queue = cl::CommandQueue::getDefault();
 	for (int i = 0; i < size; i++) {
 		for (char j = 1; j < 10; j++) {
 			if (!output[i].r[j]) {
 				clEnqueueCopyBuffer(queue(), oldInputBuffer(), newInputBuffer(),
 					palletSize*i, palletSize*count, palletSize, 0, NULL, NULL);
-				clEnqueueWriteBuffer(queue(), newInputBuffer(), CL_TRUE,
-					palletSize * count + smallOffset, sizeof(char), &j, 0, NULL, NULL);
+				/*clEnqueueWriteBuffer(queue(), newInputBuffer(), CL_TRUE,
+					palletSize * count + smallOffset, sizeof(char), &j, 0, NULL, NULL);*/
+				lasts[count] = j;
 				count++;
 			}
 		}		
@@ -74,16 +77,20 @@ void prepareNewBuffer(cl::Buffer& oldInputBuffer, cl::Buffer& oldOutputBuffer,
 }
 
 sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
-	std::vector<sudokuPallet> input(1);
-	input[0] = pallet;
-	std::vector<result> output(1);
+	std::vector<sudokuPallet> pallets(1);
+	pallets[0] = pallet;
+	std::vector<result> output(1); //useless
+	std::vector<cl_char> lasts(1);
 	int x = -1, y = 0;
+	int lastX = 0, lastY = 0;
 	int  size = 1;
-	cl::Buffer newInputBuffer(input.begin(), input.end(), true);
+	
+	cl::Buffer newInputBuffer(pallets.begin(), pallets.end(), true);
 	cl::Buffer newOutputBuffer(output.begin(), output.end(), false);
 	cl::Buffer oldInputBuffer, oldOutputBuffer;
 	while (!next0inPallet(pallet, y, x)) {
-		cl::Event e;
+		cl::Buffer lastInput(lasts.begin(), lasts.end(), true);
+		cl::Event e; //useless
 		std::cout << "size: ";
 
 		cl::NDRange ndrg(size);
@@ -92,8 +99,8 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 		std::cout << size << std::endl;
 
 		e = vectorAddKernel(arg,
-			newOutputBuffer, newInputBuffer,
-			y, x);
+			newOutputBuffer, newInputBuffer, lastInput,
+			y, x, lastY, lastX);
 
 		end = clock();
 		std::cout << "time: " << (double)(end - start)/1000 << std::endl;
@@ -104,15 +111,20 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 		oldInputBuffer = newInputBuffer;
 		oldOutputBuffer = newOutputBuffer;
 		prepareNewBuffer(oldInputBuffer, oldOutputBuffer, newInputBuffer,
-			newOutputBuffer, y, x, size);
+			newOutputBuffer, y, x, size, lasts);
 
-		cl::copy(newInputBuffer, input.begin(), input.end());
+		cl::copy(newInputBuffer, pallets.begin(), pallets.end());
 
-		//printPallet("hope", input[0]);
+		//printPallet("hope", pallets[0]);
+		lastX = x;
+		lastY = y;
 
 	}
-
-	return input[0];
+	pallets.resize(size);
+	cl::copy(newInputBuffer, pallets.begin(), pallets.end());
+	for (int i = 0; i < pallets.size(); i++)
+		pallets[0].numbers[8][8] = lasts[i];
+	return pallets[0];
 }
 
 
@@ -123,7 +135,7 @@ main(int argc, char * argv[]) {
 	std::string sourceStr;
 	start = clock();
 
-	sudokuPallet pallet = fileToSudoku("example/Entry.txt");
+	sudokuPallet pallet = fileToSudoku("example/Hard.txt");
 	status = fileToString(filename, sourceStr);
 	if (status != SUCCESS) {
 		std::cout << "Failed to open " << filename << std::endl;

@@ -30,11 +30,15 @@ typedef struct _result {
 __kernel 
 void vectorAdd(__global result *output,
                 __global sudokuPallet *input,
-				 int y, int x)        
+				__global char *last,
+				 int y, int x,
+				 int lastY, lastX)        
 {	
     int gid = get_global_id(0);
 	__private result r;
+	input[gid].n[lastY][lastX] = last[gid];
 	__private sudokuPallet pal = input[gid];
+
 	for (int i = 1; i < 10; i++)
 		r.r[i] = 0;
 	//printf("%d %d %d %d", sizeof(sudokuPallet), sizeof(result), gid, get_local_id(0));
