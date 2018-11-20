@@ -82,7 +82,7 @@ void prepareNewBuffer(cl::Buffer& oldInputBuffer, cl::Buffer& oldOutputBuffer,
 sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 	std::vector<sudokuPallet> pallets(1);
 	pallets[0] = pallet;
-	std::vector<result> output(1);
+	std::vector<result> output(1); //useless
 	std::vector<cl_char> lasts(1);
 	std::vector<cl_int> lastPallet(1);
 	lasts[0] = pallet.numbers[0][0];
@@ -97,6 +97,7 @@ sudokuPallet solveSudoku(sudokuPallet& pallet, KernelType& vectorAddKernel) {
 	while (!next0inPallet(pallet, y, x)) {
 		cl::Buffer lastInput(lasts.begin(), lasts.end(), true);
 		cl::Buffer lastPalletPtr(lastPallet.begin(), lastPallet.end(), true);
+		cl::Event e; //useless
 
 		cl::NDRange ndrg(size);
 		cl::NDRange ndrl(size > workGroupSize ? workGroupSize : size);
