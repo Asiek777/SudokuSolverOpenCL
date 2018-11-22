@@ -1,10 +1,10 @@
 /**********************************************************************
-Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
+Copyright ï¿½2015 Advanced Micro Devices, Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-•	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-•	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or
+ï¿½	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ï¿½	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or
  other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -24,20 +24,23 @@ typedef struct _result {
 } result;
 
 //int kwadratNumber(int a) {
-//	return a / 3;
+//	return a / 3 * 3;
 //}
 
 __kernel 
 void vectorAdd(__global result *output,
-                __global sudokuPallet *input,
+                __global sudokuPallet *sudokuOut,
+				__global sudokuPallet *sudokuIn,
 				__global char *last,
+				__global int *lastPallet,
 				 int y, int x,
 				 int lastY, lastX)        
 {	
     int gid = get_global_id(0);
 	__private result r;
-	input[gid].n[lastY][lastX] = last[gid];
-	__private sudokuPallet pal = input[gid];
+	sudokuOut[gid]=sudokuIn[lastPallet[gid]];
+	sudokuOut[gid].n[lastY][lastX] = last[gid];
+	__private sudokuPallet pal = sudokuOut[gid];
 
 	for (int i = 1; i < 10; i++)
 		r.r[i] = 0;
